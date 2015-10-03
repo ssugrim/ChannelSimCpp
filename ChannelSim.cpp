@@ -1,7 +1,46 @@
 #include "ChannelSim.h"
 
+/*Reslts of type 1 expirment*/
+struct exp1_res {
+    int steps, dec;
+    
+    exp1_res(int s, int d):steps(s),dec(d){}
+};
+
+/* Experiment type 1:
+ * This experiment can be used to tune the Threshold Line parameters. We  
+ * choose parameters until we get the result of a large number of runs to 
+ * to have the worst case E(n) we want. We can also identify bias in the 
+ * Test by seeing if it assigns the center of the indifference region to 
+ * Hypothesis 1 as often as it does Hypothesis 0. This is done by summing 
+ * the decisions. If the test is biased then over a large number of runs it 
+ * will drift
+*/
+exp1_res exp1(std::shared_ptr<std::mt19937> gen,
+        std::bernoulli_distribution dis,
+        std::shared_ptr<thresholdLines> TL){
+        // Create a new Set of samples from the Bernoulli distribution
+        sampleGen chan = sampleGen(gen,dis); 
+        
+        //Tracking Variables
+        int time_ind = 0;
+        int cur_sum = chan.dSum(time_ind);
+        int cur_steps = TL->stepToComp(cur_sum, time_ind);
+    
+        //Sample until we no longer need steps to go
+        //while ( cur_steps > 0 ) {
+        while ( TL->compare(cur_sum, time_ind) == 0 ) {
+            time_ind++;
+            cur_sum = chan.dSum(time_ind);
+          //  cur_steps = TL.stepToComp(cur_sum, time_ind);
+        };
+        
+        return exp1_res(time_ind, TL->compare(cur_sum, time_ind));
+};
+
+
 int main(){
-    thresholdLines TL(0.02,0.02,0.2313,0.17); // Avg Steps: 671 Run Drift: 84 - less that 1% drift.
+    auto TL = std::make_shared<thresholdLines> (0.02,0.02,0.2313,0.17); // Avg Steps: 671 Run Drift: 84 - less that 1% drift.
     std::random_device rd;
     
     
@@ -27,36 +66,14 @@ int main(){
     std::bernoulli_distribution ber_dis(0.2);    
     std::vector<int> steps_run;
     std::vector<int> dec_run;
+    exp1_res res{0,0};
     
-    /* This loop can be used to tune the Threshold Line parameters. We  
-     * choose parameters until we get the result of a large number of runs to 
-     * to have the worst case E(n) we want. We can also identify bias in the 
-     * Test by seeing if it assigns the center of the indifference region to 
-     * Hypothesis 1 as often as it does Hypothesis 0. This is done by summing 
-     * the decisions. If the test is biased then over a large number of runs it 
-     * will drift
-    */
+    
     
     for( int run = 0; run != RUNS; run++){
-        
-        // Create a new Set of samples from the Bernoulli distribution
-        sampleGen chan = sampleGen(gen,ber_dis); //What happens to the old one?
-        
-        //Tracking Variables
-        int time_ind = 0;
-        int cur_sum = chan.dSum(time_ind);
-        int cur_steps = TL.stepToComp(cur_sum, time_ind);
-    
-        //Sample until we no longer need steps to go
-        //while ( cur_steps > 0 ) {
-        while ( TL.compare(cur_sum, time_ind) == 0 ) {
-            time_ind++;
-            cur_sum = chan.dSum(time_ind);
-          //  cur_steps = TL.stepToComp(cur_sum, time_ind);
-        };
-        
-        steps_run.push_back(time_ind);
-        dec_run.push_back(TL.compare(cur_sum, time_ind));
+        res = exp1(gen, ber_dis, TL);
+        steps_run.push_back(res.steps);
+        dec_run.push_back(res.dec);
     };
     
     double mean_steps = std::accumulate(steps_run.begin(),steps_run.end(),0) / RUNS;
