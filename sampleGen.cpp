@@ -29,6 +29,10 @@ void sampleGen::genSamples(){
 };
 
 int sampleGen::dSum(int N){
+  return doDsum(N);
+};
+
+int sampleGen::doDsum(int N){
  /* Make sure I have enough samples to compute the sum*/   
   while (N > (m_history.size() - 1))
         genSamples();

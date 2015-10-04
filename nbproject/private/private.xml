@@ -8,7 +8,11 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/home/james/src/ChannelSim/ChannelSim.cpp</file>
-            <file>file:/home/james/src/ChannelSim/thresholdLines.cpp</file>
+            <file>file:/home/james/src/ChannelSim/sampleGen.h</file>
+            <file>file:/home/james/src/ChannelSim/sampleGenCost.cpp</file>
+            <file>file:/home/james/src/ChannelSim/sampleGen.cpp</file>
+            <file>file:/home/james/src/ChannelSim/ChannelSim.h</file>
+            <file>file:/home/james/src/ChannelSim/SampleGenCost.h</file>
         </group>
     </open-files>
 </project-private>

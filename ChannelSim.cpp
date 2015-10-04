@@ -50,18 +50,23 @@ struct exp2_res{
 
 exp2_res exp2 (
     std::shared_ptr<std::mt19937> gen, //gen and TL should be common to all expirments
-    std::shared_ptr<thresholdLines> TL, 
-    std::uniform_real_distribution<double> dis //For picking parameters
+    std::shared_ptr<thresholdLines> TL,     
+    double lambda, // The cost coefficent
+    double p
     )
 {
     /*TODO: Check to make sure uniform's range is correct?*/
     
-    std::vector<sampleGen> channels;
-    for (int i = 0; i != CHANNELS; i++){
-        double p = dis(*gen);       
-        std::bernoulli_distribution ber_dis(p);
-        channels.push_back(sampleGen(gen,ber_dis));
+    std::bernoulli_distribution ber_dis(p);
+    
+    sampleGenCost chan {TL,gen,ber_dis,lambda};
+    
+    while(chan.getCurDec() == 0){
+        chan.takeSample();
+        std::cout << "Cost for step " << chan.getStep() << " has cost " << chan.getCurCost() << std::endl;    
     };
+    
+    
     return exp2_res();
 };
 
@@ -75,24 +80,28 @@ int main(){
     /*Only need onf MT object, thus ...*/
     auto gen = std::make_shared<std::mt19937>(rd()); //This is the "Randomness". Many functions will use this pointer.
     
-    /*Distribution objects I may use*/
-    std::uniform_real_distribution<double> uni_dis(0, 1); 
-    std::bernoulli_distribution ber_dis(0.2);    
     
-    std::vector<int> steps_run;
-    std::vector<int> dec_run;
-    exp1_res res{0,0};
+    /*Expirment 1:*/
+//    std::uniform_real_distribution<double> uni_dis(0, 1); 
+//    std::bernoulli_distribution ber_dis(0.2);    
+//    
+//    std::vector<int> steps_run;
+//    std::vector<int> dec_run;
+//    exp1_res res{0,0};
+//    
+//    
+//    
+//    for( int run = 0; run != RUNS; run++){
+//        res = exp1(gen, TL, ber_dis);
+//        steps_run.push_back(res.steps);
+//        dec_run.push_back(res.dec);
+//    };
+//    
+//    double mean_steps = std::accumulate(steps_run.begin(),steps_run.end(),0) / RUNS;
+//    double sum_dec = std::accumulate(dec_run.begin(),dec_run.end(),0);
+//    
+//    std::cout << "Avg Steps: " << mean_steps << " Run Drift: " << sum_dec << std::endl;
     
-    
-    
-    for( int run = 0; run != RUNS; run++){
-        res = exp1(gen, TL, ber_dis);
-        steps_run.push_back(res.steps);
-        dec_run.push_back(res.dec);
-    };
-    
-    double mean_steps = std::accumulate(steps_run.begin(),steps_run.end(),0) / RUNS;
-    double sum_dec = std::accumulate(dec_run.begin(),dec_run.end(),0);
-    
-    std::cout << "Avg Steps: " << mean_steps << " Run Drift: " << sum_dec << std::endl;
+    /*Expirment 2:*/
+    exp2(gen,TL,0.05,0.99);
 };

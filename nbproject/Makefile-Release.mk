@@ -37,6 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/ChannelSim.o \
 	${OBJECTDIR}/sampleGen.o \
+	${OBJECTDIR}/sampleGenCost.o \
 	${OBJECTDIR}/thresholdLines.o
 
 
@@ -73,6 +74,11 @@ ${OBJECTDIR}/sampleGen.o: sampleGen.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/sampleGen.o sampleGen.cpp
+
+${OBJECTDIR}/sampleGenCost.o: sampleGenCost.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/sampleGenCost.o sampleGenCost.cpp
 
 ${OBJECTDIR}/thresholdLines.o: thresholdLines.cpp 
 	${MKDIR} -p ${OBJECTDIR}

@@ -13,6 +13,7 @@
 /*my stuff*/
 #include "thresholdLines.h"
 #include "sampleGen.h"
+#include "SampleGenCost.h"
 
 #ifndef CHANNELSIM_H
 #define	CHANNELSIM_H
