@@ -4,7 +4,8 @@
 struct exp1_res {
     int steps, dec;
     
-    exp1_res(int s, int d):steps(s),dec(d){}
+    /*simple constucotor for initilization*/
+    exp1_res(int s, int d):steps(s),dec(d){};
 };
 
 /* Experiment type 1:
@@ -16,9 +17,13 @@ struct exp1_res {
  * the decisions. If the test is biased then over a large number of runs it 
  * will drift
 */
-exp1_res exp1(std::shared_ptr<std::mt19937> gen,
-        std::bernoulli_distribution dis,
-        std::shared_ptr<thresholdLines> TL){
+exp1_res exp1(
+    std::shared_ptr<std::mt19937> gen, //The "Randomness" generator
+    std::shared_ptr<thresholdLines> TL, //Threshold lines
+    std::bernoulli_distribution dis //Turns randomenss in Bernoulli dist
+    )
+{ 
+    
         // Create a new Set of samples from the Bernoulli distribution
         sampleGen chan = sampleGen(gen,dis); 
         
@@ -38,32 +43,42 @@ exp1_res exp1(std::shared_ptr<std::mt19937> gen,
         return exp1_res(time_ind, TL->compare(cur_sum, time_ind));
 };
 
+struct exp2_res{
+
+    exp2_res(){};
+};
+
+exp2_res exp2 (
+    std::shared_ptr<std::mt19937> gen, //gen and TL should be common to all expirments
+    std::shared_ptr<thresholdLines> TL, 
+    std::uniform_real_distribution<double> dis //For picking parameters
+    )
+{
+    /*TODO: Check to make sure uniform's range is correct?*/
+    
+    std::vector<sampleGen> channels;
+    for (int i = 0; i != CHANNELS; i++){
+        double p = dis(*gen);       
+        std::bernoulli_distribution ber_dis(p);
+        channels.push_back(sampleGen(gen,ber_dis));
+    };
+    return exp2_res();
+};
 
 int main(){
+    /*Only need one TL object, so pass it around as a shared pointer*/
     auto TL = std::make_shared<thresholdLines> (0.02,0.02,0.2313,0.17); // Avg Steps: 671 Run Drift: 84 - less that 1% drift.
+    
+    /*used to seed Mersenne Twister*/
     std::random_device rd;
     
+    /*Only need onf MT object, thus ...*/
+    auto gen = std::make_shared<std::mt19937>(rd()); //This is the "Randomness". Many functions will use this pointer.
     
-    /* Make a shared pointer for the mersenne twister
-     * all gen samples will need one
-     */
-    auto gen = std::make_shared<std::mt19937>(rd());    
+    /*Distribution objects I may use*/
     std::uniform_real_distribution<double> uni_dis(0, 1); 
-        
-//    Choosing multiple channel sets (will need this later)    
-//    std::vector<sampleGen> channels;
-//    for (int i = 0; i != CHANNELS; i++){
-//        double p = uni_dis(*gen);
-//        
-//        /* each sample set get's it own bernoulli dist but a copy of the
-//         * mersenne twister. 
-//         */
-//        std::bernoulli_distribution ber_dis(p);
-//        channels.push_back(sampleGen(gen,ber_dis));
-//    };
-    
-    
     std::bernoulli_distribution ber_dis(0.2);    
+    
     std::vector<int> steps_run;
     std::vector<int> dec_run;
     exp1_res res{0,0};
@@ -71,7 +86,7 @@ int main(){
     
     
     for( int run = 0; run != RUNS; run++){
-        res = exp1(gen, ber_dis, TL);
+        res = exp1(gen, TL, ber_dis);
         steps_run.push_back(res.steps);
         dec_run.push_back(res.dec);
     };
@@ -81,34 +96,3 @@ int main(){
     
     std::cout << "Avg Steps: " << mean_steps << " Run Drift: " << sum_dec << std::endl;
 };
-
-//Single time index, multiple channesl
-//for(auto& chan: channels){
-//         int cur_sum = chan.dSum(1);
-//         int step_tc = TL.stepToComp(cur_sum, 1);
-//         std::cout << "\nCurrent sum " << cur_sum << " requires Step to complete " << step_tc << std::endl;
-//    }
-
-
-// OLD Tests
-//    std::bernoulli_distribution d1(0.45);    
-//    sampleGen s1(sp1,d1);
-//    
-//    std::bernoulli_distribution d2(0.05);
-//        sampleGen s2(sp2,d2);
-//    
-//    std::bernoulli_distribution d3(0.2);
-//    sampleGen s3(sp3,d3);
-//    
-//    int index = 100;
-//    int s1_sum = s1.dSum(index);
-//    int s2_sum = s2.dSum(index);
-//    int s3_sum = s3.dSum(index);
-//    
-//    int s1_res = TL.compare(s1_sum,index);
-//    int s2_res = TL.compare(s2_sum,index);
-//    int s3_res = TL.compare(s3_sum,index);
-//    
-//    std::cout << "The " << index <<" step for s1 is: " << s1_res << std::endl;    
-//    std::cout << "The " << index <<" step for s2 is: " << s2_res << std::endl;
-//    std::cout << "The " << index <<" step for s3 is: " << s3_res << std::endl;
